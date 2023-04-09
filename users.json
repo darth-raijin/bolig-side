@@ -1,0 +1,10 @@
+{
+  "_id": "UUID",
+  "firstname": "John",
+  "lastname": "Doe",
+  "email": "email",
+  "country": "ISO ALPHA",
+  "password": "",
+  "realtor": false,
+  "subsriptionId": "UUID"
+}
