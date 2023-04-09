@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loop-backend
+spec:
+  selector:
+    matchLabels:
+      app: loop-backend
+  template:
+    metadata:
+      labels:
+        app: loop-backend
+    spec:
+      containers:
+      - name: loop-backend
+        image: h0tsauce/loop-api:latest
+        resources:
+        ports:
+        - containerPort: 8080
+          hostPort: 8080
