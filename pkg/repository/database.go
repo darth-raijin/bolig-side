@@ -1,50 +1,51 @@
 package repository
 
 import (
+	"context"
 	"fmt"
 	"log"
 
-	"github.com/darth-raijin/bolig-side/api/models/entities"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+	"github.com/darth-raijin/bolig-side/pkg/utility"
+
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var (
-	GormDB *gorm.DB
+	client *mongo.Client
 )
 
-func GormConnectDatabase() {
+func MongoConnectDatabase() {
 	var err error
 
-	// Values declared in .env -> keep secret pls
-	username := "postgres"
-	password := "postgres"
-	host := "127.0.0.1"
-	port := 5432
-	database := "tolder"
+	fmt.Print("foo")
+	fmt.Print(utility.GetAppConfig().Database)
+	// Set client options
+	clientOptions := options.Client().ApplyURI(fmt.Sprintf("mongodb+srv://%v:%v@%v.mongodb.net/?retryWrites=true&w=majority",
+		utility.GetAppConfig().Database.Username,
+		utility.GetAppConfig().Database.Password,
+		utility.GetAppConfig().Database.Database,
+	))
 
-	connection := fmt.Sprintf("postgresql://%v:%v@%v:%v/%v?sslmode=disable",
-		username,
-		password,
-		host,
-		port,
-		database,
-	)
-
-	GormDB, err = gorm.Open(postgres.Open(connection), &gorm.Config{})
-
+	// Connect to MongoDB
+	client, err := mongo.Connect(context.Background(), clientOptions)
 	if err != nil {
-		log.Fatalln(err)
-		log.Default().Println("Failed connecting to database, retrying in 10 seconds")
-		GormConnectDatabase()
+		log.Fatal(err)
 	}
 
-	migrateEntities()
-}
+	// Check the connection
+	err = client.Ping(context.Background(), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-func migrateEntities() {
-	GormDB.AutoMigrate(&entities.Question{})
-	GormDB.AutoMigrate(&entities.Event{})
-	GormDB.AutoMigrate(&entities.Feedback{})
-	GormDB.AutoMigrate(&entities.User{})
+	fmt.Println("Connected to MongoDB!")
+
+	// Disconnect from MongoDB
+	err = client.Disconnect(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Disconnected from MongoDB!")
 }

@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 )
 
 func Initialize() *fiber.App {
@@ -15,10 +16,13 @@ func Initialize() *fiber.App {
 
 	api := app.Group("/api")
 
+	api.Use(logger.New(logger.Config{
+		Format:   "${cyan}[${time}]${red} ${status}${white} - ${method} ${url}  \n",
+		TimeZone: "Europe/Copenhagen",
+	}))
+
 	// Registering endpoints
 	initializeAuth(api)
-	initializeEvent(api)
-	initializeFeedback(api)
 	initializeProfile(api)
 
 	return app

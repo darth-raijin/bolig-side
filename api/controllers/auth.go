@@ -47,3 +47,8 @@ func RegisterUser(c *fiber.Ctx) error {
 	}
 	return c.Status(http.StatusServiceUnavailable).JSON(errorDto.DomainErrorWrapper{})
 }
+
+func GetRegisterView(c *fiber.Ctx) error {
+
+	return nil
+}
