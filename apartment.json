@@ -1,0 +1,37 @@
+{
+  "_id": "UUID",
+  "created": "Tiemstamp",
+  "updated": null,
+  "boosted": true,
+  "title": "Title",
+  "description": "Desc",
+  "images": [
+    "url1"
+  ],
+  "address_one": "Dobdob vej 12",
+  "address_two": "2 sal tv",
+  "zipcode": "5240",
+  "country": "DK",
+  "details": {
+    "type": "apartment/house/room",
+    "rooms": 2,
+    "size": "54 m^2 / eller ft^2",
+    "animals": true,
+    "seniorFriendly": true,
+    "disabilityFriendly": false,
+    "balcony": true,
+    "floor": 2,
+    "shareFriendly": true,
+    "elevator": true,
+    "studentsOnly": true,
+    "parking": false
+  },
+  "availability": {
+    "period": "1-11 months",
+    "availableFrom": "Timestamp",
+    "monthlyRent": "$5200",
+    "deposit": "£2000",
+    "moveInPrice": "7200",
+  },
+  "realtor": "FK UUID to user"
+}
