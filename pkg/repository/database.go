@@ -11,15 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var (
-	client *mongo.Client
-)
-
-func MongoConnectDatabase() {
-	var err error
-
-	fmt.Print("foo")
-	fmt.Print(utility.GetAppConfig().Database)
+func MongoConnectDatabase(collectionName string) (*mongo.Client, *mongo.Collection, error) {
 	// Set client options
 	clientOptions := options.Client().ApplyURI(fmt.Sprintf("mongodb+srv://%v:%v@%v.mongodb.net/?retryWrites=true&w=majority",
 		utility.GetAppConfig().Database.Username,
@@ -30,19 +22,26 @@ func MongoConnectDatabase() {
 	// Connect to MongoDB
 	client, err := mongo.Connect(context.Background(), clientOptions)
 	if err != nil {
-		log.Fatal(err)
+		return nil, nil, err
 	}
 
 	// Check the connection
 	err = client.Ping(context.Background(), nil)
 	if err != nil {
-		log.Fatal(err)
+		return nil, nil, err
 	}
 
 	fmt.Println("Connected to MongoDB!")
 
-	// Disconnect from MongoDB
-	err = client.Disconnect(context.Background())
+	// Get the collection
+	db := client.Database(utility.GetAppConfig().Database.Database)
+	collection := db.Collection(collectionName)
+
+	return client, collection, nil
+}
+
+func DisconnectMongo(ctx context.Context, client *mongo.Client) {
+	err := client.Disconnect(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}

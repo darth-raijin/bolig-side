@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"net/http"
 	"time"
 
 	errorDto "github.com/darth-raijin/bolig-side/api/models/dtos/error"
@@ -23,7 +22,7 @@ import (
 // @Failure 422 {object} errorDto.DomainErrorWrapper{}
 // @Router /api/auth/register [POST]
 func RegisterUser(c *fiber.Ctx) error {
-	payload := new(registerUserDto.CreateEventRequest)
+	payload := new(registerUserDto.RegisterUserRequest)
 
 	if err := c.BodyParser(payload); err != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(err)
@@ -40,12 +39,13 @@ func RegisterUser(c *fiber.Ctx) error {
 		})
 	}
 
-	_, err := service.AuthService.CreateUser(*payload)
+	created, err := service.AuthService.CreateUser(*payload)
 
 	if len(err.Errors) > 0 {
 		return c.Status(err.Statuscode).JSON(err)
 	}
-	return c.Status(http.StatusServiceUnavailable).JSON(errorDto.DomainErrorWrapper{})
+
+	return c.Status(fiber.StatusCreated).JSON(created)
 }
 
 func GetRegisterView(c *fiber.Ctx) error {

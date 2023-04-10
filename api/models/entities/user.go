@@ -3,16 +3,17 @@ package entities
 import (
 	"time"
 
-	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type User struct {
-	ID            uuid.UUID `gorm:"type:uuid;primary_key"`
-	Username      string    `gorm:"unique_index;not null"`
-	Name          string
-	Email         string    `gorm:"unique_index;not null"`
-	Password      string    // Do some crazy HASH + SALT
-	Hosted        []Event   `gorm:"foreignKey:ID"`
-	Participating []Event   `gorm:"foreignKey:ID"`
-	Created       time.Time `gorm:"autoCreateTime"`
+	BaseEntity
+	FirstName      string             `bson:"firstname,omitempty"`
+	LastName       string             `bson:"lastname,omitempty"`
+	Email          string             `bson:"email,omitempty"`
+	Country        string             `bson:"country,omitempty"`
+	Password       string             `bson:"password,omitempty"`
+	Realtor        bool               `bson:"realtor,omitempty"`
+	SubscriptionID primitive.ObjectID `bson:"subscriptionId,omitempty"`
+	LastLoggedIn   time.Time          `bson:"lastLoggedIn,omitempty"`
 }
