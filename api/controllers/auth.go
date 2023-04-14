@@ -19,6 +19,7 @@ import (
 // @Tags Auth
 // @Accept json
 // @Produce json
+// @Failure 201 {object} registerUserDto.RegisterUserResponsego r{}
 // @Failure 422 {object} errorDto.DomainErrorWrapper{}
 // @Router /api/auth/register [POST]
 func RegisterUser(c *fiber.Ctx) error {

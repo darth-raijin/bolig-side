@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/darth-raijin/bolig-side/pkg/utility"
 
@@ -22,20 +21,14 @@ func MongoConnectDatabase(collectionName string) (*mongo.Client, *mongo.Collecti
 	// Connect to MongoDB
 	client, err := mongo.Connect(context.Background(), clientOptions)
 	if err != nil {
+		utility.Log(utility.ERROR, fmt.Sprintf("Failed to connect to database: %s", err))
 		return nil, nil, err
 	}
-
-	// Check the connection
-	err = client.Ping(context.Background(), nil)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	fmt.Println("Connected to MongoDB!")
 
 	// Get the collection
 	db := client.Database(utility.GetAppConfig().Database.Database)
 	collection := db.Collection(collectionName)
+	utility.Log(utility.INFO, fmt.Sprintf("Successfully fetched collection: %s", collectionName))
 
 	return client, collection, nil
 }
@@ -43,8 +36,8 @@ func MongoConnectDatabase(collectionName string) (*mongo.Client, *mongo.Collecti
 func DisconnectMongo(ctx context.Context, client *mongo.Client) {
 	err := client.Disconnect(context.Background())
 	if err != nil {
-		log.Fatal(err)
+		utility.Log(utility.ERROR, fmt.Sprintf("Failed to disconnect to database: %s", err))
 	}
 
-	fmt.Println("Disconnected from MongoDB!")
+	utility.Log(utility.ERROR, fmt.Sprintf("Failed to connect to database: %s", err))
 }

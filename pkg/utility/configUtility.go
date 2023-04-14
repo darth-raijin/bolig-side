@@ -17,6 +17,7 @@ type Config struct {
 	Server struct {
 		Port int `yaml:"port"`
 	} `yaml:"server"`
+	Discord string `yaml:"discord"`
 }
 
 var config *Config

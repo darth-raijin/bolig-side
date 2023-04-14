@@ -1,50 +1,4 @@
 definitions:
-  createEventDto.CreateEventRequest:
-    properties:
-      city:
-        maxLength: 255
-        type: string
-      country:
-        type: string
-      description:
-        example: Sample description
-        maxLength: 255
-        type: string
-      name:
-        maxLength: 32
-        minLength: 3
-        type: string
-    required:
-    - description
-    - name
-    type: object
-  dtos.Event:
-    properties:
-      id:
-        format: uuid
-        type: string
-      name:
-        example: Go Crash Course
-        type: string
-      questions:
-        items:
-          $ref: '#/definitions/dtos.Question'
-        type: array
-    required:
-    - id
-    - name
-    - questions
-    type: object
-  dtos.Question:
-    properties:
-      id:
-        format: uuid
-        type: string
-      question:
-        type: string
-      rating:
-        type: integer
-    type: object
   errorDto.DomainError:
     properties:
       domainErrorCode:
@@ -58,13 +12,34 @@ definitions:
         items:
           $ref: '#/definitions/errorDto.DomainError'
         type: array
+      statuscode:
+        type: integer
       timestamp:
+        type: string
+    type: object
+  registerUserDto.RegisterUserResponse:
+    properties:
+      country:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+      password:
+        type: string
+      realtor:
+        type: boolean
+      subscription_id:
         type: string
     type: object
 info:
   contact: {}
-  description: REST API server for Loop aka 'the Feedback' app
-  title: Loop
+  description: REST API server for bolig-side aka 'the Feedback' app
+  title: bolig-side
 paths:
   /api/auth/register:
     post:
@@ -77,6 +52,10 @@ paths:
       produces:
       - application/json
       responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/registerUserDto.RegisterUserResponse'
         "422":
           description: Unprocessable Entity
           schema:
@@ -84,51 +63,4 @@ paths:
       summary: Registers a user
       tags:
       - Auth
-  /api/v1/events:
-    post:
-      consumes:
-      - application/json
-      description: Creates an event
-      parameters:
-      - description: Required parameters to create an event
-        in: body
-        name: Event
-        required: true
-        schema:
-          $ref: '#/definitions/dtos.Event'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/createEventDto.CreateEventRequest'
-        "419":
-          description: ""
-          schema:
-            $ref: '#/definitions/errorDto.DomainErrorWrapper'
-      summary: Creates an event
-      tags:
-      - Event
-  /api/v1/events/{id}:
-    get:
-      consumes:
-      - application/json
-      description: Get a specific event by ID
-      parameters:
-      - description: id for fetching given event
-        in: query
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/errorDto.DomainErrorWrapper'
-      summary: Get a specific event by ID
-      tags:
-      - Event
 swagger: "2.0"
