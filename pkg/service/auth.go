@@ -67,9 +67,62 @@ func (authService) CreateUser(user registerUserDto.RegisterUserRequest) (registe
 	return response, errorDto.DomainErrorWrapper{}
 }
 
-func (authService) LoginUser(user loginUserDto.LoginUserRequest) loginUserDto.LoginUserResponse {
+func (authService) LoginUser(user loginUserDto.LoginUserRequest) (loginUserDto.LoginUserResponse, errorDto.DomainErrorWrapper) {
+	dto := entities.User{
+		Email:    user.Email,
+		Password: user.Password,
+	}
 
-	return loginUserDto.LoginUserResponse{}
+	foundUser, err := entityrepository.GetUserByEmail(dto.Email, dto.Password)
+	if err != nil {
+		return loginUserDto.LoginUserResponse{}, errorDto.DomainErrorWrapper{
+			Statuscode: fiber.StatusUnauthorized,
+			Timestamp:  time.Now(),
+			Errors: []errorDto.DomainError{
+				{
+					Message: "Invalid credentials",
+				},
+			},
+		}
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(foundUser.Password), []byte(user.Password))
+	if err != nil {
+		return loginUserDto.LoginUserResponse{}, errorDto.DomainErrorWrapper{
+			Statuscode: fiber.StatusUnauthorized,
+			Timestamp:  time.Now(),
+			Errors: []errorDto.DomainError{
+				{
+					Message: "Invalid credentials",
+				},
+			},
+		}
+	}
+
+	accessToken, refreshToken, err := utility.
+	if err != nil {
+		return loginUserDto.LoginUserResponse{}, errorDto.DomainErrorWrapper{
+			Statuscode: fiber.StatusInternalServerError,
+			Timestamp:  time.Now(),
+			Errors: []errorDto.DomainError{
+				{
+					Message: "Failed to issue tokens",
+				},
+			},
+		}
+	}
+
+	response := loginUserDto.LoginUserResponse{
+		ID:           foundUser.ID.String(),
+		FirstName:    foundUser.FirstName,
+		LastName:     foundUser.LastName,
+		Email:        foundUser.Email,
+		Country:      foundUser.Country,
+		Realtor:      foundUser.Realtor,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}
+	return response, errorDto.DomainErrorWrapper{}
 }
 
 func (authService) ResetPassword() {

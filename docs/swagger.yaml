@@ -17,7 +17,7 @@ definitions:
       timestamp:
         type: string
     type: object
-  registerUserDto.RegisterUserResponse:
+  registerUserDto.RegisterUserRequest:
     properties:
       country:
         type: string
@@ -25,16 +25,25 @@ definitions:
         type: string
       first_name:
         type: string
-      id:
-        type: string
       last_name:
         type: string
       password:
+        minLength: 8
         type: string
       realtor:
         type: boolean
+      repeatedPassword:
+        minLength: 8
+        type: string
       subscription_id:
         type: string
+    required:
+    - country
+    - email
+    - first_name
+    - last_name
+    - password
+    - repeatedPassword
     type: object
 info:
   contact: {}
@@ -49,13 +58,16 @@ paths:
         DomainErrorCodes:
         2: Email is already in use
         3: Password not secure
+      parameters:
+      - description: User to register
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/registerUserDto.RegisterUserRequest'
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/registerUserDto.RegisterUserResponse'
         "422":
           description: Unprocessable Entity
           schema:

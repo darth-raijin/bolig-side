@@ -20,6 +20,11 @@ var PasswordNotSecure = DomainError{
 	Message:         "Password not secure",
 }
 
+var UserNotFound = DomainError{
+	DomainErrorCode: 4,
+	Message:         "User not found. Verify your email and password",
+}
+
 type DomainError struct {
 	DomainErrorCode int    `json:"domainErrorCode,omitempty"`
 	Message         string `json:"message"`
