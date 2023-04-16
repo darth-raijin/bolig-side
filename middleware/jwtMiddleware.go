@@ -1,34 +1,30 @@
 package middleware
 
 import (
+	"strings"
+
 	"github.com/darth-raijin/bolig-side/pkg/utility"
 	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v5"
 )
 
-func jwtValidationMiddleware(tokenUtility *utility.TokenUtility) fiber.Handler {
+func JwtValidationMiddleware(tokenUtility *utility.TokenUtility) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		// Extract the token from the Authorization header.
-		tokenString := c.Get("Authorization")
-
-		if tokenString == "" {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"message": "Missing token"})
+		authHeader := c.Get("Authorization")
+		if authHeader == "" {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Missing Authorization header"})
 		}
 
-		// Validate the token.
-		token, err := tokenUtility.ValidateToken(tokenString)
+		tokenParts := strings.Split(authHeader, " ")
+		if len(tokenParts) != 2 || strings.ToLower(tokenParts[0]) != "bearer" {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid Authorization header format"})
+		}
+
+		token, err := tokenUtility.ValidateToken(tokenParts[1])
 		if err != nil {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"message": "Invalid or expired token"})
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid or expired token"})
 		}
 
-		// Extract the claims and add them to the fiber.Ctx.Locals map.
-		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"message": "Invalid claims"})
-		}
-
-		c.Locals("claims", claims)
-
+		c.Locals("token", token)
 		return c.Next()
 	}
 }

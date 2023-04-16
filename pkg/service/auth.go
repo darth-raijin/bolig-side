@@ -8,6 +8,7 @@ import (
 	registerUserDto "github.com/darth-raijin/bolig-side/api/models/dtos/user/register"
 	"github.com/darth-raijin/bolig-side/api/models/entities"
 	entityrepository "github.com/darth-raijin/bolig-side/pkg/repository/entityRepository"
+	"github.com/darth-raijin/bolig-side/pkg/utility"
 	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -54,6 +55,7 @@ func (authService) CreateUser(user registerUserDto.RegisterUserRequest) (registe
 			},
 		}
 		return registerUserDto.RegisterUserResponse{}, wrapper
+
 	}
 
 	response := registerUserDto.RegisterUserResponse{
@@ -99,7 +101,10 @@ func (authService) LoginUser(user loginUserDto.LoginUserRequest) (loginUserDto.L
 		}
 	}
 
-	accessToken, refreshToken, err := utility.
+	tokenUtil, err := utility.GetTokenUtilityInstance()
+
+	tokenUtil.IssueToken()
+
 	if err != nil {
 		return loginUserDto.LoginUserResponse{}, errorDto.DomainErrorWrapper{
 			Statuscode: fiber.StatusInternalServerError,
@@ -112,8 +117,10 @@ func (authService) LoginUser(user loginUserDto.LoginUserRequest) (loginUserDto.L
 		}
 	}
 
+	accessToken := "foo0"
+	refreshToken := "foo1"
+
 	response := loginUserDto.LoginUserResponse{
-		ID:           foundUser.ID.String(),
 		FirstName:    foundUser.FirstName,
 		LastName:     foundUser.LastName,
 		Email:        foundUser.Email,

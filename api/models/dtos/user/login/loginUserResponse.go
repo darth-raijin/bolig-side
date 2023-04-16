@@ -1,8 +1,17 @@
 package loginUserDto
 
+import (
+	"time"
+)
+
 type LoginUserResponse struct {
-	Username string `json:"username" validate:"required, min=3, max=12" example:"DarthMaul1337"`
-	Name     string `json:"name" validate:"required" example:"Name"`
-	Email    string `json:"email" validate:"required, email"`
-	Password string `json:"password" validate:"required"`
+	FirstName    string    `json:"firstname,omitempty"`
+	LastName     string    `json:"lastname,omitempty"`
+	Email        string    `json:"email,omitempty"`
+	Country      string    `json:"country,omitempty"`
+	Password     string    `json:"password,omitempty"`
+	Realtor      bool      `json:"realtor,omitempty"`
+	LastLoggedIn time.Time `json:"lastLoggedIn,omitempty"`
+	AccessToken  string    `json:"access_token,omitempty"`
+	RefreshToken string    `json:"refresh_token,omitempty"`
 }

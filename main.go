@@ -22,18 +22,16 @@ var (
 func main() {
 	utility.LoadConfig()
 	verifyDatabaseConnection()
-	tokenUtility := createTokenUtility()
 
-	app := routes.Initialize(tokenUtility)
+	app := routes.Initialize(createTokenUtility())
 
 	printLogo()
 	app.Listen(":8080")
 }
 
 func createTokenUtility() *utility.TokenUtility {
-	tokenUtility, err := utility.NewTokenUtility(2048, 24*time.Hour)
+	tokenUtility, err := utility.GetTokenUtilityInstance()
 	if err != nil {
-		log.Fatalf("failed to create token utility: %v", err)
 		utility.Log(utility.ERROR, "Failed to create token utility: %v", err)
 	}
 

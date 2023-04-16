@@ -18,20 +18,39 @@ type TokenUtility struct {
 	publicKey           *rsa.PublicKey
 	keyRotationInterval time.Duration
 	keyRotationTicker   *time.Ticker
+	expiration          *time.Time
 }
 
 // Singleton
 var tokenUtilityInstance *TokenUtility
 var tokenUtilityOnce sync.Once
 
+func GetTokenUtilityInstance() (*TokenUtility, error) {
+	keySize := 2048
+	keyRotationInterval := 24 * time.Hour
+
+	tokenUtilityOnce.Do(func() {
+		var err error
+		tokenUtilityInstance, err = newTokenUtility(keySize, keyRotationInterval)
+		if err != nil {
+			Log(ERROR, fmt.Sprintf("Failed to create token utility: %v", err))
+		}
+	})
+	return tokenUtilityInstance, nil
+}
+
+func (tu *TokenUtility) GetPrivateKey() *rsa.PrivateKey {
+	return tokenUtilityInstance.privateKey
+}
+
 // NewTokenUtility creates a new instance of TokenUtility.
 // keySize: The size of the RSA key in bits (2048 or 4096 are recommended).
 // keyRotationInterval: The interval between private key rotations.
-func NewTokenUtility(keySize int, keyRotationInterval time.Duration) (*TokenUtility, error) {
+func newTokenUtility(keySize int, keyRotationInterval time.Duration) (*TokenUtility, error) {
 	// Generate the initial RSA private key.
 	privateKey, err := rsa.GenerateKey(rand.Reader, keySize)
 	if err != nil {
-		Log(ERROR, fmt.Sprintf("failed to generate RSA key: %v", err))
+		Log(ERROR, fmt.Sprintf("Failed to generate RSA key: %v", err))
 		return nil, err
 	}
 
@@ -71,26 +90,42 @@ func (tu *TokenUtility) rotateKey() {
 // claims: A map of custom claims that will be embedded in the token.
 // expiresIn: The number of seconds before the token expires.
 // Returns a signed JWT token.
-func (tu *TokenUtility) IssueToken(claims jwt.MapClaims, expiresIn time.Duration, sub string) (string, error) {
+func (tu *TokenUtility) IssueToken(customClaims map[string]interface{}) (string, string, error) {
 	tu.mutex.RLock()
 	defer tu.mutex.RUnlock()
 
+	accessTokenDuration := time.Hour
+	refreshTokenDuration := 24 * time.Hour
+
 	// Create a new JWT token with the provided claims and expiration time.
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-
-	// Setting claims
-	claims["exp"] = time.Now()
-	claims["sub"] = sub
-
-	// Sign the token using the RSA private key.
-	signedToken, err := token.SignedString(tu.privateKey)
-	if err != nil {
-		Log(ERROR, "Failed to sign the token: %v", err)
-		return "", err
+	claims := jwt.MapClaims{
+		"exp": time.Now().Add(accessTokenDuration).Unix(),
 	}
 
-	Log(INFO, "Issued token for user: %v", sub)
-	return signedToken, nil
+	// Add custom claims.
+	for k, v := range customClaims {
+		claims[k] = v
+	}
+
+	// Sign the token using the RSA private key.
+	accessToken := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	signedAccessToken, err := accessToken.SignedString(tu.privateKey)
+	if err != nil {
+		Log(ERROR, "Failed to sign the access token: %v", err)
+		return "", "", err
+	}
+
+	// Create and sign the refresh token.
+	refreshToken := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	claims["exp"] = time.Now().Add(refreshTokenDuration).Unix() // Set the refresh token to expire later than the access token.
+	signedRefreshToken, err := refreshToken.SignedString(tu.privateKey)
+	if err != nil {
+		Log(ERROR, "Failed to sign the refresh token: %v", err)
+		return "", "", err
+	}
+
+	Log(INFO, "Issued token for user: %v", claims["sub"])
+	return signedAccessToken, signedRefreshToken, nil
 }
 
 // ValidateToken parses and validates a JWT token using the RSA public key.
@@ -118,4 +153,25 @@ func (tu *TokenUtility) ValidateToken(tokenString string) (*jwt.Token, error) {
 	subject, _ := token.Claims.GetSubject()
 	Log(INFO, "Validated token for user: %v", subject)
 	return token, nil
+}
+
+func (tu *TokenUtility) RefreshToken(accessTokenString, refreshTokenString string, expiresIn time.Duration) (string, string, error) {
+	_, err := tu.ValidateToken(accessTokenString)
+	if err != nil {
+		// Access token is invalid or expired, check if the refresh token is still valid.
+		refreshToken, err := tu.ValidateToken(refreshTokenString)
+		if err != nil {
+			// Refresh token is also invalid or expired, deny access.
+			return "", "", fmt.Errorf("both access and refresh tokens are invalid or expired: %w", err)
+		}
+
+		newAccessToken, newRefreshToken, err := tu.IssueToken(refreshToken.Claims.(jwt.MapClaims))
+		if err != nil {
+			return "", "", fmt.Errorf("failed to generate new tokens: %w", err)
+		}
+		return newAccessToken, newRefreshToken, nil
+	}
+
+	// Access token is still valid, return it as is.
+	return accessTokenString, refreshTokenString, nil
 }

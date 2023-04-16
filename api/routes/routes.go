@@ -3,6 +3,7 @@ package routes
 import (
 	"os"
 
+	"github.com/darth-raijin/bolig-side/middleware"
 	"github.com/darth-raijin/bolig-side/pkg/utility"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -15,7 +16,7 @@ func Initialize(tokenUtility *utility.TokenUtility) *fiber.App {
 		initializeSwagger(app)
 	}
 
-	api := app.Group("/api")
+	api := app.Group("/api", middleware.JwtValidationMiddleware(tokenUtility))
 
 	api.Use(logger.New(logger.Config{
 		Format:   "${cyan}[${time}]${red} ${status}${white} - ${method} ${url}  \n",
