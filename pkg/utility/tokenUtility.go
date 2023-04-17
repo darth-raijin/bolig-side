@@ -147,6 +147,8 @@ func (tu *TokenUtility) ValidateToken(tokenString string) (*jwt.Token, error) {
 	})
 
 	if err != nil {
+		Log(ERROR, fmt.Sprintf("Token is invalid or expired: %v", err))
+
 		return nil, fmt.Errorf("invalid or expired token: %w", err)
 	}
 
@@ -155,23 +157,20 @@ func (tu *TokenUtility) ValidateToken(tokenString string) (*jwt.Token, error) {
 	return token, nil
 }
 
-func (tu *TokenUtility) RefreshToken(accessTokenString, refreshTokenString string, expiresIn time.Duration) (string, string, error) {
-	_, err := tu.ValidateToken(accessTokenString)
+func (tu *TokenUtility) RefreshToken(refreshTokenString string) (string, string, error) {
+	// Check if the refresh token is still valid.
+	refreshToken, err := tu.ValidateToken(refreshTokenString)
 	if err != nil {
-		// Access token is invalid or expired, check if the refresh token is still valid.
-		refreshToken, err := tu.ValidateToken(refreshTokenString)
-		if err != nil {
-			// Refresh token is also invalid or expired, deny access.
-			return "", "", fmt.Errorf("both access and refresh tokens are invalid or expired: %w", err)
-		}
-
-		newAccessToken, newRefreshToken, err := tu.IssueToken(refreshToken.Claims.(jwt.MapClaims))
-		if err != nil {
-			return "", "", fmt.Errorf("failed to generate new tokens: %w", err)
-		}
-		return newAccessToken, newRefreshToken, nil
+		// Refresh token is invalid or expired, deny access.
+		Log(ERROR, fmt.Sprintf("Refresh token is invalid or expired: %v", err))
+		return "", "", fmt.Errorf("refresh token is invalid or expired")
 	}
 
-	// Access token is still valid, return it as is.
-	return accessTokenString, refreshTokenString, nil
+	// Refresh token is valid, issue new access and refresh tokens.
+	newAccessToken, newRefreshToken, err := tu.IssueToken(refreshToken.Claims.(jwt.MapClaims))
+	if err != nil {
+		Log(ERROR, fmt.Sprintf("Failed to generate new tokens: %v", err))
+		return "", "", fmt.Errorf("failed to generate new tokens: %w", err)
+	}
+	return newAccessToken, newRefreshToken, nil
 }

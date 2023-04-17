@@ -69,6 +69,5 @@ func GetRegisterView(c *fiber.Ctx) error {
 		})
 	}
 
-	created, err := service.AuthService.LoginUser(*payload)
 	return nil
 }

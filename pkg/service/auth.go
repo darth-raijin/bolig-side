@@ -10,6 +10,7 @@ import (
 	entityrepository "github.com/darth-raijin/bolig-side/pkg/repository/entityRepository"
 	"github.com/darth-raijin/bolig-side/pkg/utility"
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -103,7 +104,7 @@ func (authService) LoginUser(user loginUserDto.LoginUserRequest) (loginUserDto.L
 
 	tokenUtil, err := utility.GetTokenUtilityInstance()
 
-	tokenUtil.IssueToken()
+	tokenUtil.IssueToken(jwt.MapClaims{})
 
 	if err != nil {
 		return loginUserDto.LoginUserResponse{}, errorDto.DomainErrorWrapper{

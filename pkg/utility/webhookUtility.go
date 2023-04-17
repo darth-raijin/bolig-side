@@ -80,7 +80,7 @@ func NewSuccess(data Webhook) error {
 		AvatarURL: "https://i.imgur.com/OY6le94.png",
 		Embeds: []*Embed{
 			{
-				Title: fmt.Sprint(":thunder_cloud_rain: %v", data.Title),
+				Title: fmt.Sprintf(":thunder_cloud_rain: %v", data.Title),
 				Color: 2752256,
 				Image: &Image{
 					URL: "https://i.imgur.com/MKntxoJ.png",
