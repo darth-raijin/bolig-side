@@ -23,10 +23,19 @@ func main() {
 	utility.LoadConfig()
 	verifyDatabaseConnection()
 
-	app := routes.Initialize()
+	app := routes.Initialize(createTokenUtility())
 
 	printLogo()
 	app.Listen(":8080")
+}
+
+func createTokenUtility() *utility.TokenUtility {
+	tokenUtility, err := utility.GetTokenUtilityInstance()
+	if err != nil {
+		utility.Log(utility.ERROR, "Failed to create token utility: %v", err)
+	}
+
+	return tokenUtility
 }
 
 func verifyDatabaseConnection() {

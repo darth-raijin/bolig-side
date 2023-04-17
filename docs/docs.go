@@ -29,13 +29,18 @@ const docTemplate = `{
                     "Auth"
                 ],
                 "summary": "Registers a user",
-                "responses": {
-                    "201": {
-                        "description": "Created",
+                "parameters": [
+                    {
+                        "description": "User to register",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
                         "schema": {
-                            "$ref": "#/definitions/registerUserDto.RegisterUserResponse"
+                            "$ref": "#/definitions/registerUserDto.RegisterUserRequest"
                         }
-                    },
+                    }
+                ],
+                "responses": {
                     "422": {
                         "description": "Unprocessable Entity",
                         "schema": {
@@ -75,8 +80,16 @@ const docTemplate = `{
                 }
             }
         },
-        "registerUserDto.RegisterUserResponse": {
+        "registerUserDto.RegisterUserRequest": {
             "type": "object",
+            "required": [
+                "country",
+                "email",
+                "first_name",
+                "last_name",
+                "password",
+                "repeatedPassword"
+            ],
             "properties": {
                 "country": {
                     "type": "string"
@@ -87,17 +100,19 @@ const docTemplate = `{
                 "first_name": {
                     "type": "string"
                 },
-                "id": {
-                    "type": "string"
-                },
                 "last_name": {
                     "type": "string"
                 },
                 "password": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 8
                 },
                 "realtor": {
                     "type": "boolean"
+                },
+                "repeatedPassword": {
+                    "type": "string",
+                    "minLength": 8
                 },
                 "subscription_id": {
                     "type": "string"

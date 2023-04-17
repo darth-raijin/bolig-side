@@ -8,7 +8,9 @@ import (
 	registerUserDto "github.com/darth-raijin/bolig-side/api/models/dtos/user/register"
 	"github.com/darth-raijin/bolig-side/api/models/entities"
 	entityrepository "github.com/darth-raijin/bolig-side/pkg/repository/entityRepository"
+	"github.com/darth-raijin/bolig-side/pkg/utility"
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -54,6 +56,7 @@ func (authService) CreateUser(user registerUserDto.RegisterUserRequest) (registe
 			},
 		}
 		return registerUserDto.RegisterUserResponse{}, wrapper
+
 	}
 
 	response := registerUserDto.RegisterUserResponse{
@@ -67,9 +70,67 @@ func (authService) CreateUser(user registerUserDto.RegisterUserRequest) (registe
 	return response, errorDto.DomainErrorWrapper{}
 }
 
-func (authService) LoginUser(user loginUserDto.LoginUserRequest) loginUserDto.LoginUserResponse {
+func (authService) LoginUser(user loginUserDto.LoginUserRequest) (loginUserDto.LoginUserResponse, errorDto.DomainErrorWrapper) {
+	dto := entities.User{
+		Email:    user.Email,
+		Password: user.Password,
+	}
 
-	return loginUserDto.LoginUserResponse{}
+	foundUser, err := entityrepository.GetUserByEmail(dto.Email, dto.Password)
+	if err != nil {
+		return loginUserDto.LoginUserResponse{}, errorDto.DomainErrorWrapper{
+			Statuscode: fiber.StatusUnauthorized,
+			Timestamp:  time.Now(),
+			Errors: []errorDto.DomainError{
+				{
+					Message: "Invalid credentials",
+				},
+			},
+		}
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(foundUser.Password), []byte(user.Password))
+	if err != nil {
+		return loginUserDto.LoginUserResponse{}, errorDto.DomainErrorWrapper{
+			Statuscode: fiber.StatusUnauthorized,
+			Timestamp:  time.Now(),
+			Errors: []errorDto.DomainError{
+				{
+					Message: "Invalid credentials",
+				},
+			},
+		}
+	}
+
+	tokenUtil, err := utility.GetTokenUtilityInstance()
+
+	tokenUtil.IssueToken(jwt.MapClaims{})
+
+	if err != nil {
+		return loginUserDto.LoginUserResponse{}, errorDto.DomainErrorWrapper{
+			Statuscode: fiber.StatusInternalServerError,
+			Timestamp:  time.Now(),
+			Errors: []errorDto.DomainError{
+				{
+					Message: "Failed to issue tokens",
+				},
+			},
+		}
+	}
+
+	accessToken := "foo0"
+	refreshToken := "foo1"
+
+	response := loginUserDto.LoginUserResponse{
+		FirstName:    foundUser.FirstName,
+		LastName:     foundUser.LastName,
+		Email:        foundUser.Email,
+		Country:      foundUser.Country,
+		Realtor:      foundUser.Realtor,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}
+	return response, errorDto.DomainErrorWrapper{}
 }
 
 func (authService) ResetPassword() {

@@ -3,7 +3,10 @@ package utility
 import (
 	"fmt"
 	"log"
-	"os"
+	"path/filepath"
+	"runtime"
+
+	"github.com/fatih/color"
 )
 
 type LogLevel int
@@ -12,40 +15,35 @@ const (
 	INFO LogLevel = iota
 	WARNING
 	ERROR
+	DEBUG
 )
 
-type logger struct {
-	infoLogger    *log.Logger
-	warningLogger *log.Logger
-	errorLogger   *log.Logger
-}
+func Log(level LogLevel, format string, args ...interface{}) {
+	_, file, line, _ := runtime.Caller(1)
+	_, fileName := filepath.Split(file)
 
-var loggerInstance = &logger{
-	infoLogger:    log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime),
-	warningLogger: log.New(os.Stdout, "WARNING: ", log.Ldate|log.Ltime),
-	errorLogger:   log.New(os.Stderr, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile),
-}
+	logMsg := fmt.Sprintf(format, args...)
 
-func Log(level LogLevel, format string, v ...interface{}) {
-	message := fmt.Sprintf(format, v...)
 	switch level {
 	case INFO:
-		loggerInstance.infoLogger.Println(message)
+		color.Set(color.FgCyan)
+		log.Printf("[INFO] %s:%d - %s\n", fileName, line, logMsg)
+		color.Unset()
 	case WARNING:
-		loggerInstance.warningLogger.Println(message)
+		color.Set(color.FgYellow)
+		log.Printf("[WARNING] %s:%d - %s\n", fileName, line, logMsg)
+		color.Unset()
 	case ERROR:
-		loggerInstance.errorLogger.Println(message)
+		color.Set(color.FgRed)
+		log.Printf("[ERROR] %s:%d - %s\n", fileName, line, logMsg)
+		color.Unset()
+	case DEBUG:
+		color.Set(color.FgGreen)
+		log.Printf("[DEBUG] %s:%d - %s\n", fileName, line, logMsg)
+		color.Unset()
+	default:
+		color.Set(color.FgWhite)
+		log.Printf("[UNKNOWN] %s:%d - %s\n", fileName, line, logMsg)
+		color.Unset()
 	}
-}
-
-func Info(format string, v ...interface{}) {
-	Log(INFO, format, v...)
-}
-
-func Warning(format string, v ...interface{}) {
-	Log(WARNING, format, v...)
-}
-
-func Error(format string, v ...interface{}) {
-	Log(ERROR, format, v...)
 }
